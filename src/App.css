@@ -1,38 +1,289 @@
-.App {
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #ffffff;
+  color: #1a0533;
+}
+
+/* LOGIN */
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #7c3aed, #ea580c);
+}
+
+.login-card {
+  width: 380px;
+  background: white;
+  border-radius: 22px;
+  padding: 35px;
+  box-shadow: 0 20px 45px rgba(0,0,0,.25);
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.login-card h1 {
+  color: #7c3aed;
+  margin-bottom: 5px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.login-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 25px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+input {
+  padding: 13px;
+  border: 1px solid #e0d4f7;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+button {
+  padding: 13px;
+  border: none;
+  border-radius: 10px;
+  background: #ea580c;
   color: white;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.App-link {
-  color: #61dafb;
+button:hover {
+  background: #c2410c;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+/* LAYOUT */
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 245px;
+  background: #4c1d95;
+  color: white;
+  padding: 25px;
+  box-shadow: 8px 0 25px rgba(0,0,0,.12);
+}
+
+.sidebar h2 {
+  color: #86efac;
+  margin-bottom: 8px;
+}
+
+.role {
+  color: #e9d5ff;
+  margin-bottom: 25px;
+}
+
+.sidebar button {
+  width: 100%;
+  margin-bottom: 12px;
+  background: #6d28d9;
+  text-align: left;
+}
+
+.sidebar button:hover {
+  background: #ea580c;
+}
+
+.logout {
+  margin-top: 30px;
+  background: #dc2626 !important;
+}
+
+/* MAIN */
+.main {
+  flex: 1;
+  padding: 28px;
+  background: #f9f9ff;
+}
+
+/* TOPBAR */
+.topbar {
+  background: white;
+  border-radius: 18px;
+  padding: 22px 26px;
+  box-shadow: 0 8px 22px rgba(124,58,237,.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.topbar h1 {
+  margin: 0;
+  color: #7c3aed;
+}
+
+/* KPI */
+.kpi-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin: 25px 0;
+}
+
+.kpi-card {
+  background: white;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 8px 22px rgba(124,58,237,.08);
+  border-left: 7px solid #ea580c;
+}
+
+.kpi-card b {
+  font-size: 24px;
+  color: #7c3aed;
+}
+
+/* FORM PRODUCTO */
+.product-form {
+  background: white;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 8px 22px rgba(124,58,237,.08);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.product-form button {
+  grid-column: span 1;
+}
+
+/* NOTICE */
+.notice {
+  background: #fff7ed;
+  border-left: 6px solid #ea580c;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  background: white;
+  margin-top: 25px;
+  border-collapse: collapse;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 22px rgba(124,58,237,.08);
+}
+
+th {
+  background: #7c3aed;
+  color: white;
+  padding: 14px;
+  text-align: left;
+}
+
+td {
+  padding: 13px;
+  border-bottom: 1px solid #f3e8ff;
+}
+
+/* BADGES */
+.badge {
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.normal {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.por-vencer {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.vencido {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* REPORTES */
+.report-card {
+  background: white;
+  padding: 22px;
+  margin-bottom: 15px;
+  border-radius: 16px;
+  box-shadow: 0 8px 22px rgba(124,58,237,.08);
+}
+
+/* GRAFICOS */
+.chart-box {
+  background: white;
+  padding: 25px;
+  border-radius: 18px;
+  box-shadow: 0 8px 22px rgba(124,58,237,.08);
+  margin: 20px 0;
+}
+
+.bar {
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 12px;
+  color: white;
+  font-weight: bold;
+  min-width: 120px;
+}
+
+.bar.normal {
+  background: #4ade80;
+}
+
+.bar.por-vencer {
+  background: #ea580c;
+}
+
+.bar.vencido {
+  background: #dc2626;
+}
+
+.bar.categoria {
+  background: #7c3aed;
+}
+
+/* BOTONES EXTRA */
+.delete-btn {
+  background: #dc2626;
+}
+
+.delete-btn:hover {
+  background: #991b1b;
+}
+
+.cancel-btn {
+  background: #9333ea;
+}
+
+.cancel-btn:hover {
+  background: #7c3aed;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .layout {
+    flex-direction: column;
   }
-  to {
-    transform: rotate(360deg);
+
+  .sidebar {
+    width: auto;
+  }
+
+  .kpi-container {
+    grid-template-columns: 1fr;
+  }
+
+  .product-form {
+    grid-template-columns: 1fr;
   }
 }
