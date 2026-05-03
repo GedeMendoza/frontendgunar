@@ -10,6 +10,7 @@ function App() {
   const [filtro, setFiltro] = useState("todos");
   const [editando, setEditando] = useState(false);
   const [idEditar, setIdEditar] = useState(null);
+  const [menuAbierto, setMenuAbierto] = useState(false); // ← menú hamburguesa móvil
 
   const [form, setForm] = useState({
     nombre: "",
@@ -21,10 +22,8 @@ function App() {
     fecha_vencimiento: ""
   });
 
-  // ✅ Login desde Supabase — sin objeto hardcodeado
   const iniciarSesion = async (e) => {
     e.preventDefault();
-
     const { data, error } = await supabase
       .from("usuarios")
       .select("*, roles(nombre)")
@@ -33,48 +32,26 @@ function App() {
       .eq("activo", true)
       .single();
 
-    if (error || !data) {
-      alert("Credenciales incorrectas");
-      return;
-    }
+    if (error || !data) { alert("Credenciales incorrectas"); return; }
 
-    const usuarioLogueado = {
-      nombre: data.nombre,
-      rol: data.roles.nombre
-    };
-
+    const usuarioLogueado = { nombre: data.nombre, rol: data.roles.nombre };
     setUsuario(usuarioLogueado);
     setPagina(usuarioLogueado.rol === "almacen" ? "productos" : "dashboard");
   };
 
-  const cerrarSesion = () => {
-    setUsuario(null);
-    setPagina("dashboard");
-  };
+  const cerrarSesion = () => { setUsuario(null); setPagina("dashboard"); };
 
   const cargarProductos = async () => {
     const { data, error } = await supabase.from("productos").select("*");
     if (!error) setProductos(data);
   };
 
-  useEffect(() => {
-    if (usuario) cargarProductos();
-  }, [usuario]);
+  useEffect(() => { if (usuario) cargarProductos(); }, [usuario]);
 
-  const cambiarDato = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const cambiarDato = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const limpiarFormulario = () => {
-    setForm({
-      nombre: "",
-      categoria: "",
-      stock: "",
-      stock_min: "",
-      precio_compra: "",
-      precio_venta: "",
-      fecha_vencimiento: ""
-    });
+    setForm({ nombre: "", categoria: "", stock: "", stock_min: "", precio_compra: "", precio_venta: "", fecha_vencimiento: "" });
     setEditando(false);
     setIdEditar(null);
   };
@@ -94,15 +71,13 @@ function App() {
     setEditando(true);
     setIdEditar(p.id);
     setForm({
-      nombre: p.nombre,
-      categoria: p.categoria,
-      stock: p.stock,
-      stock_min: p.stock_min,
-      precio_compra: p.precio_compra,
+      nombre: p.nombre, categoria: p.categoria, stock: p.stock,
+      stock_min: p.stock_min, precio_compra: p.precio_compra,
       precio_venta: p.precio_venta,
       fecha_vencimiento: p.fecha_vencimiento?.substring(0, 10)
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
+    setMenuAbierto(false);
   };
 
   const eliminarProducto = async (id) => {
@@ -120,53 +95,31 @@ function App() {
   };
 
   const calcularKPI = () => {
-    let total = productos.length;
-    let bajoStock = 0;
-    let vencidos = 0;
-    let porVencer = 0;
-    let valorInventario = 0;
-    let ganancia = 0;
-
+    let total = productos.length, bajoStock = 0, vencidos = 0, porVencer = 0,
+        valorInventario = 0, ganancia = 0;
     productos.forEach((p) => {
       const estado = obtenerEstado(p.fecha_vencimiento);
-      const stock = Number(p.stock);
-      const min = Number(p.stock_min);
-      const compra = Number(p.precio_compra);
-      const venta = Number(p.precio_venta);
-
+      const stock = Number(p.stock), min = Number(p.stock_min);
+      const compra = Number(p.precio_compra), venta = Number(p.precio_venta);
       if (stock <= min) bajoStock++;
       if (estado.texto === "Vencido") vencidos++;
       if (estado.texto === "Por vencer") porVencer++;
-
       valorInventario += stock * compra;
       ganancia += (venta - compra) * stock;
     });
-
     return { total, bajoStock, vencidos, porVencer, valorInventario, ganancia };
   };
 
   const exportarCSV = () => {
-    const encabezado = [
-      "Nombre", "Categoria", "Stock", "Stock minimo",
-      "Precio compra", "Precio venta", "Vencimiento",
-      "Estado", "Valor inventario", "Ganancia estimada"
-    ];
-
+    const encabezado = ["Nombre","Categoria","Stock","Stock minimo","Precio compra","Precio venta","Vencimiento","Estado","Valor inventario","Ganancia estimada"];
     const filas = productos.map((p) => {
       const estado = obtenerEstado(p.fecha_vencimiento);
       const valor = Number(p.stock) * Number(p.precio_compra);
       const ganancia = (Number(p.precio_venta) - Number(p.precio_compra)) * Number(p.stock);
-      return [
-        p.nombre, p.categoria, p.stock, p.stock_min,
-        p.precio_compra, p.precio_venta,
-        p.fecha_vencimiento?.substring(0, 10),
-        estado.texto, valor.toFixed(2), ganancia.toFixed(2)
-      ];
+      return [p.nombre, p.categoria, p.stock, p.stock_min, p.precio_compra, p.precio_venta, p.fecha_vencimiento?.substring(0, 10), estado.texto, valor.toFixed(2), ganancia.toFixed(2)];
     });
-
     let csv = "\uFEFF" + encabezado.join(";") + "\n";
     filas.forEach((fila) => { csv += fila.join(";") + "\n"; });
-
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -177,9 +130,7 @@ function App() {
 
   const resumenCategorias = () => {
     const resumen = {};
-    productos.forEach((p) => {
-      resumen[p.categoria] = (resumen[p.categoria] || 0) + 1;
-    });
+    productos.forEach((p) => { resumen[p.categoria] = (resumen[p.categoria] || 0) + 1; });
     return Object.entries(resumen);
   };
 
@@ -195,6 +146,13 @@ function App() {
 
   const kpi = calcularKPI();
 
+  // Navegar y cerrar menú en móvil
+  const navegarA = (pag) => {
+    setPagina(pag);
+    setMenuAbierto(false);
+  };
+
+  // ─── LOGIN ───────────────────────────────────────────────────────────────
   if (!usuario) {
     return (
       <div className="login-page">
@@ -213,43 +171,72 @@ function App() {
               value={login.pass}
               onChange={(e) => setLogin({ ...login, pass: e.target.value })}
             />
-            <button>Ingresar</button>
+            <button type="submit">Ingresar</button>
           </form>
         </div>
       </div>
     );
   }
 
-  const puedeVerDashboard = usuario.rol === "admin" || usuario.rol === "dueno";
-  const puedeRegistrar = usuario.rol === "admin" || usuario.rol === "almacen";
-  const puedeVerGanancias = usuario.rol === "admin" || usuario.rol === "dueno";
+  const puedeVerDashboard  = usuario.rol === "admin" || usuario.rol === "dueno";
+  const puedeRegistrar     = usuario.rol === "admin" || usuario.rol === "almacen";
+  const puedeVerGanancias  = usuario.rol === "admin" || usuario.rol === "dueno";
 
+  // ─── APP ─────────────────────────────────────────────────────────────────
   return (
     <div className="layout">
-      <aside className="sidebar">
-        <h2>FreshStock</h2>
+
+      {/* ── SIDEBAR ── */}
+      <aside className={`sidebar${menuAbierto ? " sidebar--open" : ""}`}>
+        {/* Header del sidebar */}
+        <div className="sidebar-header">
+          <h2>FreshStock</h2>
+          {/* Botón X para cerrar en móvil */}
+          <button
+            className="menu-close-btn"
+            onClick={() => setMenuAbierto(false)}
+            aria-label="Cerrar menú"
+          >✕</button>
+        </div>
+
         <p className="role">{usuario.nombre}</p>
 
         {puedeVerDashboard && (
-          <button onClick={() => setPagina("dashboard")}>Dashboard</button>
+          <button onClick={() => navegarA("dashboard")}>📊 Dashboard</button>
         )}
-        <button onClick={() => setPagina("productos")}>Inventario</button>
+        <button onClick={() => navegarA("productos")}>📦 Inventario</button>
         {puedeVerGanancias && (
-          <button onClick={() => setPagina("reportes")}>Reportes</button>
+          <button onClick={() => navegarA("reportes")}>📈 Reportes</button>
         )}
-        <button className="logout" onClick={cerrarSesion}>Cerrar sesión</button>
+        <button className="logout" onClick={cerrarSesion}>🚪 Cerrar sesión</button>
       </aside>
 
+      {/* Overlay oscuro al abrir menú en móvil */}
+      {menuAbierto && (
+        <div className="sidebar-overlay" onClick={() => setMenuAbierto(false)} />
+      )}
+
+      {/* ── MAIN ── */}
       <main className="main">
+
+        {/* Topbar */}
         <header className="topbar">
+          {/* Botón hamburguesa (solo visible en móvil via CSS) */}
+          <button
+            className="hamburger-btn"
+            onClick={() => setMenuAbierto(true)}
+            aria-label="Abrir menú"
+          >☰</button>
+
           <h1>
-            {usuario.rol === "admin" && "Panel Administrador"}
+            {usuario.rol === "admin"   && "Panel Administrador"}
             {usuario.rol === "almacen" && "Panel Almacenero"}
-            {usuario.rol === "dueno" && "Panel Dueño"}
+            {usuario.rol === "dueno"   && "Panel Dueño"}
           </h1>
-          <span>Rol: {usuario.rol}</span>
+          <span className="rol-badge">Rol: {usuario.rol}</span>
         </header>
 
+        {/* ── DASHBOARD ── */}
         {pagina === "dashboard" && puedeVerDashboard && (
           <>
             <h2>Dashboard KPI</h2>
@@ -264,34 +251,48 @@ function App() {
 
             <h2>Gráfico de estados</h2>
             <div className="chart-box">
-              <div className="bar normal">Normales: {kpi.total - kpi.vencidos - kpi.porVencer}</div>
-              <div className="bar por-vencer">Por vencer: {kpi.porVencer}</div>
-              <div className="bar vencido">Vencidos: {kpi.vencidos}</div>
+              <div className="bar normal">✅ Normales: {kpi.total - kpi.vencidos - kpi.porVencer}</div>
+              <div className="bar por-vencer">⚠️ Por vencer: {kpi.porVencer}</div>
+              <div className="bar vencido">❌ Vencidos: {kpi.vencidos}</div>
             </div>
           </>
         )}
 
+        {/* ── INVENTARIO ── */}
         {pagina === "productos" && (
           <>
             <h2>Inventario de productos</h2>
+
+            {/* Filtros con scroll horizontal en móvil */}
             <div className="filter-box">
-              <button onClick={() => setFiltro("todos")}>Todos</button>
-              <button onClick={() => setFiltro("normal")}>Normal</button>
-              <button onClick={() => setFiltro("por-vencer")}>Por vencer</button>
-              <button onClick={() => setFiltro("vencido")}>Vencidos</button>
-              <button onClick={() => setFiltro("bajo-stock")}>Bajo stock</button>
+              {[
+                { key: "todos",      label: "Todos" },
+                { key: "normal",     label: "Normal" },
+                { key: "por-vencer", label: "Por vencer" },
+                { key: "vencido",    label: "Vencidos" },
+                { key: "bajo-stock", label: "Bajo stock" },
+              ].map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setFiltro(key)}
+                  className={filtro === key ? "filter-active" : ""}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
 
+            {/* Formulario */}
             {puedeRegistrar && (
               <form className="product-form" onSubmit={guardarProducto}>
-                <input name="nombre" placeholder="Nombre" value={form.nombre} onChange={cambiarDato} required />
-                <input name="categoria" placeholder="Categoría" value={form.categoria} onChange={cambiarDato} required />
-                <input name="stock" type="number" placeholder="Stock" value={form.stock} onChange={cambiarDato} required />
-                <input name="stock_min" type="number" placeholder="Stock mínimo" value={form.stock_min} onChange={cambiarDato} required />
-                <input name="precio_compra" type="number" step="0.01" placeholder="Precio compra" value={form.precio_compra} onChange={cambiarDato} required />
-                <input name="precio_venta" type="number" step="0.01" placeholder="Precio venta" value={form.precio_venta} onChange={cambiarDato} required />
-                <input name="fecha_vencimiento" type="date" value={form.fecha_vencimiento} onChange={cambiarDato} required />
-                <button>{editando ? "Actualizar producto" : "Guardar producto"}</button>
+                <input name="nombre"           placeholder="Nombre"         value={form.nombre}           onChange={cambiarDato} required />
+                <input name="categoria"        placeholder="Categoría"      value={form.categoria}        onChange={cambiarDato} required />
+                <input name="stock"            type="number" placeholder="Stock"         value={form.stock}            onChange={cambiarDato} required />
+                <input name="stock_min"        type="number" placeholder="Stock mínimo"  value={form.stock_min}        onChange={cambiarDato} required />
+                <input name="precio_compra"    type="number" step="0.01" placeholder="Precio compra"  value={form.precio_compra}    onChange={cambiarDato} required />
+                <input name="precio_venta"     type="number" step="0.01" placeholder="Precio venta"   value={form.precio_venta}     onChange={cambiarDato} required />
+                <input name="fecha_vencimiento" type="date"  value={form.fecha_vencimiento} onChange={cambiarDato} required />
+                <button type="submit">{editando ? "Actualizar producto" : "Guardar producto"}</button>
                 {editando && (
                   <button type="button" className="cancel-btn" onClick={limpiarFormulario}>Cancelar</button>
                 )}
@@ -302,51 +303,56 @@ function App() {
               <div className="notice">Vista solo lectura: el dueño revisa inventario y ganancias.</div>
             )}
 
-            <table>
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Categoría</th>
-                  <th>Stock</th>
-                  <th>Stock mín.</th>
-                  {puedeVerGanancias && <th>Compra</th>}
-                  {puedeVerGanancias && <th>Venta</th>}
-                  <th>Vencimiento</th>
-                  <th>Estado</th>
-                  {usuario.rol === "admin" && <th>Acción</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {productosFiltrados.map((p) => {
-                  const estado = obtenerEstado(p.fecha_vencimiento);
-                  return (
-                    <tr key={p.id}>
-                      <td>{p.nombre}</td>
-                      <td>{p.categoria}</td>
-                      <td>{p.stock}</td>
-                      <td>{p.stock_min}</td>
-                      {puedeVerGanancias && <td>S/ {p.precio_compra}</td>}
-                      {puedeVerGanancias && <td>S/ {p.precio_venta}</td>}
-                      <td>{p.fecha_vencimiento?.substring(0, 10)}</td>
-                      <td><span className={`badge ${estado.clase}`}>{estado.texto}</span></td>
-                      {usuario.rol === "admin" && (
-                        <td>
-                          <button onClick={() => cargarParaEditar(p)}>Editar</button>
-                          <button className="delete-btn" onClick={() => eliminarProducto(p.id)}>Eliminar</button>
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            {/* Tabla con scroll horizontal */}
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Stock</th>
+                    <th>Mín.</th>
+                    {puedeVerGanancias && <th>Compra</th>}
+                    {puedeVerGanancias && <th>Venta</th>}
+                    <th>Vencimiento</th>
+                    <th>Estado</th>
+                    {usuario.rol === "admin" && <th>Acción</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {productosFiltrados.map((p) => {
+                    const estado = obtenerEstado(p.fecha_vencimiento);
+                    return (
+                      <tr key={p.id}>
+                        <td>{p.nombre}</td>
+                        <td>{p.categoria}</td>
+                        <td>{p.stock}</td>
+                        <td>{p.stock_min}</td>
+                        {puedeVerGanancias && <td>S/ {p.precio_compra}</td>}
+                        {puedeVerGanancias && <td>S/ {p.precio_venta}</td>}
+                        <td>{p.fecha_vencimiento?.substring(0, 10)}</td>
+                        <td><span className={`badge ${estado.clase}`}>{estado.texto}</span></td>
+                        {usuario.rol === "admin" && (
+                          <td className="action-cell">
+                            <button onClick={() => cargarParaEditar(p)}>✏️</button>
+                            <button className="delete-btn" onClick={() => eliminarProducto(p.id)}>🗑️</button>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
 
+        {/* ── REPORTES ── */}
         {pagina === "reportes" && puedeVerGanancias && (
           <>
             <h2>Reportes para Excel</h2>
-            <button onClick={exportarCSV}>Exportar CSV para Excel</button>
+            <button onClick={exportarCSV}>📥 Exportar CSV para Excel</button>
+
             <div className="report-card">Ganancia estimada total: <b>S/ {kpi.ganancia.toFixed(2)}</b></div>
             <div className="report-card">Valor total del inventario: <b>S/ {kpi.valorInventario.toFixed(2)}</b></div>
             <div className="report-card">Productos por vencer: <b>{kpi.porVencer}</b></div>
@@ -359,6 +365,7 @@ function App() {
             </div>
           </>
         )}
+
       </main>
     </div>
   );
